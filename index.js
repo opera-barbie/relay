@@ -4,25 +4,27 @@ const app = express();
 
 app.use('/', async (req, res) => {
   let target;
-  
-  // route untuk OKX
-  if (req.originalUrl.startsWith('/okx')) {
-    target = 'https://web3.okx.com' + req.originalUrl.replace('/okx','');
-  } 
-  // route untuk Jupiter
-  else if (req.originalUrl.startsWith('/jup')) {
-    target = 'https://price.jup.ag' + req.originalUrl.replace('/jup','');
-  }
-  // route untuk Jupiter quote
-  else if (req.originalUrl.startsWith('/quote')) {
-    target = 'https://quote-api.jup.ag' + req.originalUrl.replace('/quote','');
-  }
-  else {
-    return res.status(404).send('Use /okx or /jup or /quote');
+  const path = req.originalUrl;
+
+  if (path.startsWith('/okx')) {
+    // OKX DEX API baru 2026
+    target = 'https://web3.okx.com' + path.replace('/okx','');
+  } else if (path.startsWith('/jup')) {
+    target = 'https://price.jup.ag' + path.replace('/jup','');
+  } else if (path.startsWith('/quote')) {
+    target = 'https://quote-api.jup.ag' + path.replace('/quote','');
+  } else {
+    return res.status(200).send('OKX+Jupiter relay active');
   }
 
   try {
-    const r = await fetch(target, { headers: { 'User-Agent': 'Meridian/1.0' }});
+    const r = await fetch(target, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json',
+        'Referer': 'https://web3.okx.com'
+      }
+    });
     res.set('Access-Control-Allow-Origin', '*');
     res.status(r.status).send(await r.text());
   } catch(e) {
@@ -30,5 +32,4 @@ app.use('/', async (req, res) => {
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log('Relay OKX+Jupiter running'));
+module.exports = app;
