@@ -1,12 +1,16 @@
 {
-  "name": "relay",
+  "name": "opera-barbie-relay",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api/index.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node api/index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "node-fetch": "^2.6.7"
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
