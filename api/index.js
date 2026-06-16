@@ -21,15 +21,17 @@ app.all('*', async (req, res) => {
   } else if (path.startsWith('/goplus')) {
     target = 'https://api.gopluslabs.io' + path.replace('/goplus', '');
   // --- BARU: proxy universal ---
-  } else if (path.startsWith('/proxy')) {
-    const url = new URL('http://dummy' + path);
-    target = url.searchParams.get('url');
-    if (!target) return res.status(400).send('missing ?url=');
-    // decode
-    target = decodeURIComponent(target);
-  } else {
-    return res.send('relay ok');
-  }
+} else if (path === '/proxy' || path.startsWith('/proxy?')) {
+  const target = req.query.url;  // Express sudah parse query, sudah decode
+  if (!target) return res.status(400).send('missing ?url=');
+  
+  // lanjut fetch
+  const r = await fetch(target, { headers: { 'user-agent': 'relay' } });
+  const body = await r.text();
+  res.status(r.status).send(body);
+} else {
+  return res.send('relay ok');
+}
 
   try {
     const r = await fetch(target, {
