@@ -17,6 +17,8 @@ target = 'https://web3.okx.com' + path.replace('/okx', '');
 target = 'https://api.jup.ag' + path.replace('/jup', '');
 } else if (path.startsWith('/quote')) {
 target = 'https://quote-api.jup.ag' + path.replace('/quote', '');
+} else if (path.startsWith('/goplus')) {
+  target = 'https://api.gopluslabs.io' + path.replace('/goplus', '');
 } else {
 return res.send('relay ok');
 }
