@@ -2,8 +2,10 @@ const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 
+app.use(express.json()); // penting
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', '*');
   next();
 });
 
@@ -11,7 +13,6 @@ app.all('*', async (req, res) => {
   const path = req.originalUrl;
   let target = '';
 
-  // --- route statis yang sudah ada ---
   if (path.startsWith('/okx')) {
     target = 'https://web3.okx.com' + path.replace('/okx', '');
   } else if (path.startsWith('/jup')) {
@@ -20,27 +21,26 @@ app.all('*', async (req, res) => {
     target = 'https://quote-api.jup.ag' + path.replace('/quote', '');
   } else if (path.startsWith('/goplus')) {
     target = 'https://api.gopluslabs.io' + path.replace('/goplus', '');
-  // --- BARU: proxy universal ---
-} else if (path === '/proxy' || path.startsWith('/proxy?')) {
-  const target = req.query.url;  // Express sudah parse query, sudah decode
-  if (!target) return res.status(400).send('missing ?url=');
-  
-  // lanjut fetch
-  const r = await fetch(target, { headers: { 'user-agent': 'relay' } });
-  const body = await r.text();
-  res.status(r.status).send(body);
-} else {
-  return res.send('relay ok');
-}
+  } else if (path.startsWith('/proxy')) {
+    target = req.query.url;
+    if (!target) return res.status(400).send('missing ?url=');
+  } else {
+    return res.send('relay ok');
+  }
 
   try {
+    // teruskan SEMUA header dari client kecuali host
+    const headers = { ...req.headers };
+    delete headers.host;
+    delete headers['content-length'];
+
     const r = await fetch(target, {
       method: req.method,
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Content-Type': 'application/json' },
+      headers,
       body: ['POST','PUT','PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined
     });
     const body = await r.text();
-    res.status(r.status).send(body);
+    res.status(r.status).set('content-type', r.headers.get('content-type') || 'application/json').send(body);
   } catch (e) {
     res.status(500).send(e.message);
   }
